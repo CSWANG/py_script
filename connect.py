@@ -46,10 +46,12 @@ def main():
 
     parser = OptionParser()
 
-    parser.add_option("-a", "--address", dest="address", default='localhost', help="ADDRESS for server",
+    parser.add_option("-a", "--address", dest="address", default="localhost", help="ADDRESS for server",
                       metavar="ADDRESS")
 
-    parser.add_option("-p", "--port", dest="port", type="int", default=80, help="PORT for server", metavar="PORT")
+    parser.add_option("-p", "--port", dest="port", type="int", default=443, help="PORT for server", metavar="PORT")
+
+    parser.add_option("-l", "--log", dest="log",  default='off', help="LOG all state", metavar="LOG")
 
     (options, args) = parser.parse_args()
     path = chkpath(os.path.realpath(os.path.dirname(sys.argv[0])))
@@ -61,12 +63,24 @@ def main():
 
     cmd = 'traceroute -d %s' % options.address
 
-    if check_server(options.address, options.port) == False:
-        initLogging(logfile)
-        logging.info('Responses fail %s port:%s' % (options.address, options.port))
-        logfile = open(filename, "w")
-        subprocess.call(cmd, shell=True, stdout=logfile)
-        logfile.close()
+    if options.log == 'all':
+        if check_server(options.address, options.port) == True:
+            initLogging(logfile)
+            logging.info('%s connected port:%s' % (options.address, options.port))
+        else:
+            initLogging(logfile)
+            logging.debug('Responses fail %s port:%s' % (options.address, options.port))
+            logfile = open(filename, "w")
+            subprocess.call(cmd, shell=True, stdout=logfile)
+            logfile.close()
+    else:
+        if check_server(options.address, options.port) == False:
+            initLogging(logfile)
+            logging.debug('Responses fail %s port:%s' % (options.address, options.port))
+            logfile = open(filename, "w")
+            subprocess.call(cmd, shell=True, stdout=logfile)
+            logfile.close()
+
 
 if __name__ == '__main__':
     main()
